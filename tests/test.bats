@@ -15,14 +15,17 @@ health_checks() {
   # Do something useful here that verifies the add-on
   # ddev exec "curl -s elasticsearch:9200" | grep "${PROJNAME}-elasticsearch"
   ddev exec hugo new site quickstart
-  cp -r quickstart/* .
+  mv -r quickstart/* .
+  rm -rf quickstart
   ddev exec hugo new theme testtheme
   echo "{{.Site.Home.Content}}" >> themes/testtheme/layouts/index.html
   echo "theme = 'testtheme'" >> config.toml
   ddev exec hugo new _index.md
   echo "# Welcome to Hugo!" >> content/_index.md
+  # Remove draft:true with sed
+  sed -i '4d' content/_index.md
   ddev exec hugo -b public
-  ddev exec "curl -s https://localhost/public" | grep "Welcome to Hugo"
+  ddev exec "curl -s https://localhost/public/index.html" | grep "Welcome to Hugo"
 }
 
 teardown() {
