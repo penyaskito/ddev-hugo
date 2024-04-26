@@ -1,0 +1,11 @@
+#ddev-generated
+ENV HUGO_BIND="0.0.0.0" \
+    HUGO_DESTINATION="public" \
+    HUGO_ENV="DEV" \
+    HOME="/tmp"
+
+COPY --from=klakegg/hugo:debian /usr/bin/hugo /usr/bin/hugo
+COPY --from=klakegg/hugo:debian /usr/bin/hugo-official /usr/bin/hugo-official
+COPY --from=klakegg/hugo:debian /etc/profile.d/hugo.sh /etc/profile.d/hugo.sh
+COPY --from=klakegg/hugo:debian /etc/profile.d/hugo_shell.sh /etc/profile.d/hugo_shell.sh
+COPY --from=klakegg/hugo:debian /usr/lib/hugo /usr/lib/hugo
