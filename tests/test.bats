@@ -7,14 +7,22 @@ setup() {
   export DDEV_NON_INTERACTIVE=true
   ddev delete -Oy ${PROJNAME} >/dev/null 2>&1 || true
   cd "${TESTDIR}"
-  ddev config --project-name=${PROJNAME}
+  ddev config --project-name=${PROJNAME} --omit-containers=db
   ddev start -y >/dev/null
 }
 
 health_checks() {
   # Do something useful here that verifies the add-on
   # ddev exec "curl -s elasticsearch:9200" | grep "${PROJNAME}-elasticsearch"
-  ddev exec "curl -s https://localhost:443/"
+  ddev exec hugo new site quickstart
+  cp -r quickstart/* .
+  ddev exec hugo new theme testtheme
+  echo "{{.Site.Home.Content}}" >> themes/testtheme/layouts/index.html
+  echo "theme = 'testtheme'" >> config.toml
+  ddev exec hugo new _index.md
+  echo "# Welcome to Hugo!" >> content/_index.md
+  ddev exec hugo -b public
+  ddev exec "curl -s https://localhost/public" | grep "Welcome to Hugo"
 }
 
 teardown() {
@@ -37,7 +45,7 @@ teardown() {
   set -eu -o pipefail
   cd ${TESTDIR} || ( printf "unable to cd to ${TESTDIR}\n" && exit 1 )
   echo "# ddev get ddev/ddev-hugo with project ${PROJNAME} in ${TESTDIR} ($(pwd))" >&3
-  ddev get ddev/ddev-hugo
+  ddev get penyaskito/ddev-hugo
   ddev restart >/dev/null
   health_checks
 }
