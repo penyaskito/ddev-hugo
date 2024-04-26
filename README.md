@@ -2,10 +2,8 @@
 
 # ddev-hugo <!-- omit in toc -->
 
-* [What is ddev-hugo?](#what-is-ddev-hugo)
-* [Components of the repository](#components-of-the-repository)
-* [Getting started](#getting-started)
-* [How to debug in Github Actions](#how-to-debug-tests-github-actions)
+- [What is ddev-hugo?](#what-is-ddev-hugo)
+- [Getting started](#getting-started)
 
 ## What is ddev-hugo?
 
