@@ -1,7 +1,9 @@
 #ddev-generated
 ENV HUGO_BIND="0.0.0.0" \
-    HUGO_DESTINATION="public" \
+    HUGO_DESTINATION="hugo" \
     HUGO_ENV="DEV" \
+    HUGO_DIR="." \
+    HUGO_CMD="-b /hugo" \
     HOME="/tmp"
 
 COPY --from=klakegg/hugo:debian /usr/bin/hugo /usr/bin/hugo
