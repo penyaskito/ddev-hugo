@@ -15,7 +15,7 @@ health_checks() {
   # Do something useful here that verifies the add-on
   # ddev exec "curl -s elasticsearch:9200" | grep "${PROJNAME}-elasticsearch"
   ddev exec hugo new site quickstart
-  mv -r quickstart/* .
+  mv quickstart/* .
   rm -rf quickstart
   ddev exec hugo new theme testtheme
   echo "{{.Site.Home.Content}}" >> themes/testtheme/layouts/index.html
