@@ -7,7 +7,7 @@ setup() {
   export DDEV_NON_INTERACTIVE=true
   ddev delete -Oy ${PROJNAME} >/dev/null 2>&1 || true
   cd "${TESTDIR}"
-  ddev config --project-name=${PROJNAME} --omit-containers=db
+  ddev config --project-name=${PROJNAME} --omit-containers=db --docroot=public
   ddev start -y >/dev/null
 }
 
@@ -24,8 +24,8 @@ health_checks() {
   echo "# Welcome to Hugo!" >> content/_index.md
   # Remove draft:true with sed
   sed -i '4d' content/_index.md
-  ddev exec hugo -b public
-  ddev exec "curl -s https://localhost/public/index.html" | grep "Welcome to Hugo"
+  ddev exec hugo
+  ddev exec "curl -s https://localhost/index.html" | grep "Welcome to Hugo"
 }
 
 teardown() {
