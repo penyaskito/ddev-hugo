@@ -15,7 +15,7 @@ In DDEV addons can be installed from the command line using the `ddev get` comma
 
 1. Create your ddev project with `ddev config --omit-containers=db --docroot public`
 2. Run `ddev get https://github.com/penyaskito/ddev-hugo`
-3. Run `ddev hugo`
+3. Run `ddev exec hugo`
 4. Run `ddev launch`
 
 **Contributed and maintained by [@penyaskito](https://github.com/penyaskito)**
