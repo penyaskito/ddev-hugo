@@ -9,7 +9,7 @@
 
 This repository is a [DDEV](https://ddev.readthedocs.io) add-on for providing [Hugo](https://gohugo.io) support.
 
-In DDEV addons can be installed from the command line using the `ddev add-on get` command, as in `ddev add-on get ddev/ddev-hugo`.
+In DDEV addons can be installed from the command line using the `ddev add-on get` command, as in `ddev add-on get penyaskito/ddev-hugo`.
 
 ## Getting started
 
