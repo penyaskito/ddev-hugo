@@ -9,12 +9,12 @@
 
 This repository is a [DDEV](https://ddev.readthedocs.io) add-on for providing [Hugo](https://gohugo.io) support.
 
-In DDEV addons can be installed from the command line using the `ddev get` command, as in `ddev get ddev/ddev-hugo`.
+In DDEV addons can be installed from the command line using the `ddev add-on get` command, as in `ddev add-on get ddev/ddev-hugo`.
 
 ## Getting started
 
 1. Create your ddev project with `ddev config --omit-containers=db --docroot public`
-2. Run `ddev get https://github.com/penyaskito/ddev-hugo`
+2. Run `ddev add-on get https://github.com/penyaskito/ddev-hugo` (or `ddev get https://github.com/penyaskito/ddev-hugo` if your version of DDEV is older than 1.23.5)
 3. Run `ddev exec hugo`
 4. Run `ddev launch`
 
