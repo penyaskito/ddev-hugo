@@ -4,6 +4,7 @@
 
 - [What is ddev-hugo?](#what-is-ddev-hugo)
 - [Getting started](#getting-started)
+- [Hugo version](#hugo-version)
 
 ## What is ddev-hugo?
 
@@ -17,5 +18,14 @@ In DDEV addons can be installed from the command line using the `ddev add-on get
 2. Run `ddev add-on get penyaskito/ddev-hugo`
 3. Run `ddev exec hugo`
 4. Run `ddev launch`
+
+## Hugo version
+
+Hugo (extended edition) is installed from the [official releases](https://github.com/gohugoio/hugo/releases)
+during the web container build. To use a different release, edit `HUGO_VERSION`
+in `.ddev/web-build/Dockerfile.ddev-hugo` and run `ddev restart`.
+
+Remove the `#ddev-generated` line at the top of that file to keep your changes
+from being overwritten the next time you run `ddev add-on get`.
 
 **Contributed and maintained by [@penyaskito](https://github.com/penyaskito)**
