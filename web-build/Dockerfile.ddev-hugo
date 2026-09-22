@@ -6,10 +6,6 @@
 # marks it as user-modified, so `ddev add-on get` will no longer overwrite it.
 ARG HUGO_VERSION="0.166.0"
 
-ENV HUGO_BIND="0.0.0.0" \
-    HUGO_DESTINATION="public" \
-    HUGO_ENV="DEV"
-
 RUN set -eu; \
     arch="$(dpkg --print-architecture)"; \
     deb="hugo_extended_${HUGO_VERSION}_linux-${arch}.deb"; \

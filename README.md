@@ -36,6 +36,27 @@ Flags are passed straight through to Hugo, the command runs in the container
 directory matching your current host directory, and generated files (such as
 `public/`) are synced back to the host.
 
+## The Hugo dev server
+
+`ddev hugo server` starts Hugo's live-reload server and is reachable from the
+host, on port 1313 over HTTPS and 1314 over HTTP:
+
+```bash
+ddev hugo server
+```
+
+`ddev describe` lists the URL under `hugo`. The command supplies `--bind`,
+`--port`, `--baseURL` and `--appendPort` so the server listens on an address
+the DDEV router can reach and generates links pointing at the routed URL.
+Passing any of those flags yourself overrides the default, and setting
+`HUGO_SERVER_PORT` changes the port the command uses.
+
+Everything else is passed through, so the usual flags work:
+
+```bash
+ddev hugo server --buildDrafts --disableFastRender
+```
+
 ## Hugo version
 
 Hugo (extended edition) is installed from the [official releases](https://github.com/gohugoio/hugo/releases)
