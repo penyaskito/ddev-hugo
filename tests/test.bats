@@ -1,33 +1,68 @@
+#!/usr/bin/env bats
+
+# Bats is a testing framework for Bash
+# Documentation https://bats-core.readthedocs.io/en/stable/
+# Bats libraries documentation https://github.com/ztombol/bats-docs
+
+# For local tests, install bats-core, bats-assert, bats-file, bats-support
+# And run this in the add-on root directory:
+#   bats ./tests/test.bats
+# To exclude release tests:
+#   bats ./tests/test.bats --filter-tags '!release'
+# For debugging:
+#   bats ./tests/test.bats --show-output-of-passing-tests --verbose-run --print-output-on-failure
+
 setup() {
   set -eu -o pipefail
-  export DIR="$( cd "$( dirname "$BATS_TEST_FILENAME" )" >/dev/null 2>&1 && pwd )/.."
-  export TESTDIR=~/tmp/test-hugo
-  mkdir -p $TESTDIR
-  export PROJNAME=test-hugo
-  export DDEV_NON_INTERACTIVE=true
-  ddev delete -Oy ${PROJNAME} >/dev/null 2>&1 || true
+
+  export GITHUB_REPO=penyaskito/ddev-hugo
+
+  TEST_BREW_PREFIX="$(brew --prefix 2>/dev/null || true)"
+  export BATS_LIB_PATH="${BATS_LIB_PATH:-}:${TEST_BREW_PREFIX}/lib:/usr/lib/bats"
+  bats_load_library bats-assert
+  bats_load_library bats-file
+  bats_load_library bats-support
+
+  export DIR="$(cd "$(dirname "${BATS_TEST_FILENAME}")/.." >/dev/null 2>&1 && pwd)"
+  export PROJNAME="test-$(basename "${GITHUB_REPO}")"
+  export TESTDIR="${HOME}/tmp/${PROJNAME}"
+  mkdir -p "${TESTDIR}"
+  export DDEV_NONINTERACTIVE=true
+  export DDEV_NO_INSTRUMENTATION=true
+  ddev delete -Oy "${PROJNAME}" >/dev/null 2>&1 || true
   cd "${TESTDIR}"
-  ddev config --project-name=${PROJNAME} --omit-containers=db --docroot=public
-  ddev start -y >/dev/null
+  run ddev config --project-name="${PROJNAME}" --project-tld=ddev.site --omit-containers=db --docroot=public
+  assert_success
+  run ddev start -y
+  assert_success
 }
 
 health_checks() {
   # The add-on must provide the extended edition, which is what supports
   # Sass/SCSS and WebP processing.
-  ddev hugo version | grep extended
+  run ddev hugo version
+  assert_success
+  assert_output --partial "extended"
+
   # The command must take flags without ddev consuming them, which is what
   # ExecRaw buys us.
-  ddev hugo new site quickstart --force
+  run ddev hugo new site quickstart --force
+  assert_success
   mv quickstart/* .
   rm -rf quickstart
-  ddev hugo new theme testtheme
+  run ddev hugo new theme testtheme
+  assert_success
   echo "theme = 'testtheme'" >> hugo.toml
   # The generated theme renders the home page content, so no layout tweak is needed.
   printf "+++\ntitle = 'Home'\n+++\n\n# Welcome to Hugo!\n" > content/_index.md
-  ddev hugo
+  run ddev hugo
+  assert_success
+
   # Output must reach the host, not just the container, so MutagenSync matters.
-  [ -f public/index.html ]
-  curl -s "$(ddev describe -j | jq -r .raw.primary_url)/index.html" | grep "Welcome to Hugo"
+  assert_file_exists public/index.html
+  run curl -s "$(ddev describe -j | jq -r .raw.primary_url)/index.html"
+  assert_success
+  assert_output --partial "Welcome to Hugo"
 }
 
 server_checks() {
@@ -38,7 +73,9 @@ server_checks() {
   url="$(ddev describe -j | jq -r .raw.primary_url | sed -E 's#(https?://[^/:]+).*#\1#'):1313"
 
   # The routed port must be advertised, so `ddev describe` can show it.
-  ddev describe | grep -F "${url}"
+  run ddev describe
+  assert_success
+  assert_output --partial "${url}"
 
   nohup ddev hugo server >"${TESTDIR}/hugo-server.log" 2>&1 &
   local server_pid=$!
@@ -60,26 +97,34 @@ server_checks() {
   kill "${server_pid}" >/dev/null 2>&1 || true
   ddev exec pkill hugo >/dev/null 2>&1 || true
 
-  [ -n "${body}" ]
+  assert [ -n "${body}" ]
   # A server bound to 127.0.0.1 answers inside the container but not from here,
   # so assert the address and URL Hugo reported as well.
-  grep -q "bind address 0.0.0.0" "${TESTDIR}/hugo-server.log"
-  grep -qF "${url}" "${TESTDIR}/hugo-server.log"
+  run grep -F "bind address 0.0.0.0" "${TESTDIR}/hugo-server.log"
+  assert_success
+  run grep -F "${url}" "${TESTDIR}/hugo-server.log"
+  assert_success
 }
 
 teardown() {
   set -eu -o pipefail
-  cd ${TESTDIR} || ( printf "unable to cd to ${TESTDIR}\n" && exit 1 )
-  ddev delete -Oy ${PROJNAME} >/dev/null 2>&1
-  [ "${TESTDIR}" != "" ] && rm -rf ${TESTDIR}
+  ddev delete -Oy "${PROJNAME}" >/dev/null 2>&1
+  # Persist TESTDIR if running inside GitHub Actions. Useful for uploading test result artifacts
+  # See example at https://github.com/ddev/github-action-add-on-test#preserving-artifacts
+  if [ -n "${GITHUB_ENV:-}" ]; then
+    [ -e "${GITHUB_ENV:-}" ] && echo "TESTDIR=${HOME}/tmp/${PROJNAME}" >> "${GITHUB_ENV}"
+  else
+    [ "${TESTDIR}" != "" ] && rm -rf "${TESTDIR}"
+  fi
 }
 
 @test "install from directory" {
   set -eu -o pipefail
-  cd ${TESTDIR}
-  echo "# ddev add-on get ${DIR} with project ${PROJNAME} in ${TESTDIR} ($(pwd))" >&3
-  ddev add-on get ${DIR}
-  ddev restart
+  echo "# ddev add-on get ${DIR} with project ${PROJNAME} in $(pwd)" >&3
+  run ddev add-on get "${DIR}"
+  assert_success
+  run ddev restart -y
+  assert_success
   health_checks
   server_checks
 }
@@ -89,11 +134,11 @@ teardown() {
 # bats test_tags=release
 @test "install from release" {
   set -eu -o pipefail
-  cd ${TESTDIR} || ( printf "unable to cd to ${TESTDIR}\n" && exit 1 )
-  echo "# ddev add-on get penyaskito/ddev-hugo with project ${PROJNAME} in ${TESTDIR} ($(pwd))" >&3
-  ddev add-on get penyaskito/ddev-hugo
-  ddev restart >/dev/null
+  echo "# ddev add-on get ${GITHUB_REPO} with project ${PROJNAME} in $(pwd)" >&3
+  run ddev add-on get "${GITHUB_REPO}"
+  assert_success
+  run ddev restart -y
+  assert_success
   health_checks
   server_checks
 }
-
