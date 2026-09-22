@@ -44,6 +44,9 @@ teardown() {
   health_checks
 }
 
+# This installs the latest published release rather than the working tree.
+# .github/workflows/tests.yml uses the tag to run it as a separate job.
+# bats test_tags=release
 @test "install from release" {
   set -eu -o pipefail
   cd ${TESTDIR} || ( printf "unable to cd to ${TESTDIR}\n" && exit 1 )

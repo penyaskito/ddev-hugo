@@ -24,8 +24,18 @@ jobs:
     strategy:
       matrix:
         ddev_version: [stable, HEAD]
+        # Run each bats test as its own job so a failure names the test that
+        # broke. Passing test_command explicitly also overrides the action's
+        # default "--filter-tags !release", which would otherwise skip the
+        # release test on pushes and pull requests.
+        test:
+          - name: directory
+            command: bats tests --filter-tags !release
+          - name: release
+            command: bats tests --filter-tags release
       fail-fast: false
 
+    name: ${{ matrix.test.name }} (${{ matrix.ddev_version }})
     runs-on: ubuntu-latest
 
     steps:
@@ -36,3 +46,4 @@ jobs:
           debug_enabled: ${{ github.event.inputs.debug_enabled }}
           addon_repository: ${{ env.GITHUB_REPOSITORY }}
           addon_ref: ${{ env.GITHUB_REF }}
+          test_command: ${{ matrix.test.command }}
