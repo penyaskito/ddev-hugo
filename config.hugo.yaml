@@ -1,0 +1,8 @@
+#ddev-generated
+# Routes Hugo's dev server port so `ddev hugo server` is reachable from the
+# host. DDEV also lists the resulting URL in `ddev describe`.
+web_extra_exposed_ports:
+  - name: hugo
+    container_port: 1313
+    http_port: 1314
+    https_port: 1313

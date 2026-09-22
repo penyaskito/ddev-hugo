@@ -30,6 +30,43 @@ health_checks() {
   curl -s "$(ddev describe -j | jq -r .raw.primary_url)/index.html" | grep "Welcome to Hugo"
 }
 
+server_checks() {
+  # hugo server must be reachable from the host, which needs both a routed
+  # 1313 and a bind address other than 127.0.0.1.
+  # Strip any router port off the primary URL before adding Hugo's.
+  local url
+  url="$(ddev describe -j | jq -r .raw.primary_url | sed -E 's#(https?://[^/:]+).*#\1#'):1313"
+
+  # The routed port must be advertised, so `ddev describe` can show it.
+  ddev describe | grep -F "${url}"
+
+  nohup ddev hugo server >"${TESTDIR}/hugo-server.log" 2>&1 &
+  local server_pid=$!
+
+  # Retry rather than sleep; the server and the router each need a moment, and
+  # the router answers 502 until the backend is up. Ask for "/" because Hugo
+  # redirects /index.html to it.
+  local body=""
+  local i
+  for i in $(seq 1 30); do
+    body="$(curl -s --max-time 3 "${url}/")" || true
+    case "${body}" in
+      *"Welcome to Hugo"*) break ;;
+    esac
+    body=""
+    sleep 1
+  done
+
+  kill "${server_pid}" >/dev/null 2>&1 || true
+  ddev exec pkill hugo >/dev/null 2>&1 || true
+
+  [ -n "${body}" ]
+  # A server bound to 127.0.0.1 answers inside the container but not from here,
+  # so assert the address and URL Hugo reported as well.
+  grep -q "bind address 0.0.0.0" "${TESTDIR}/hugo-server.log"
+  grep -qF "${url}" "${TESTDIR}/hugo-server.log"
+}
+
 teardown() {
   set -eu -o pipefail
   cd ${TESTDIR} || ( printf "unable to cd to ${TESTDIR}\n" && exit 1 )
@@ -44,6 +81,7 @@ teardown() {
   ddev add-on get ${DIR}
   ddev restart
   health_checks
+  server_checks
 }
 
 # This installs the latest published release rather than the working tree.
@@ -56,5 +94,6 @@ teardown() {
   ddev add-on get penyaskito/ddev-hugo
   ddev restart >/dev/null
   health_checks
+  server_checks
 }
 
