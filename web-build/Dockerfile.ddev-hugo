@@ -1,13 +1,19 @@
 #ddev-generated
-ENV HUGO_EDITION="extended" \
-    HUGO_BIND="0.0.0.0" \
-    HUGO_DESTINATION="public" \
-    HUGO_ENV="DEV" \
-    HUGO_DIR="." \
-    HOME="/tmp"
+# Installs Hugo (extended edition) from the official gohugoio/hugo releases.
+#
+# To use a different Hugo release, change HUGO_VERSION below and run
+# `ddev restart`. Removing the `#ddev-generated` line on top of this file
+# marks it as user-modified, so `ddev add-on get` will no longer overwrite it.
+ARG HUGO_VERSION="0.166.0"
 
-COPY --from=klakegg/hugo:ext-debian /usr/bin/hugo /usr/bin/hugo
-COPY --from=klakegg/hugo:ext-debian /usr/bin/hugo-official /usr/bin/hugo-official
-COPY --from=klakegg/hugo:ext-debian /etc/profile.d/hugo.sh /etc/profile.d/hugo.sh
-COPY --from=klakegg/hugo:ext-debian /etc/profile.d/hugo_shell.sh /etc/profile.d/hugo_shell.sh
-COPY --from=klakegg/hugo:ext-debian /usr/lib/hugo /usr/lib/hugo
+ENV HUGO_BIND="0.0.0.0" \
+    HUGO_DESTINATION="public" \
+    HUGO_ENV="DEV"
+
+RUN set -eu; \
+    arch="$(dpkg --print-architecture)"; \
+    deb="hugo_extended_${HUGO_VERSION}_linux-${arch}.deb"; \
+    curl -fsSL -o "/tmp/${deb}" "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/${deb}"; \
+    dpkg -i "/tmp/${deb}"; \
+    rm -f "/tmp/${deb}"; \
+    hugo version
