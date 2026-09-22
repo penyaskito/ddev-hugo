@@ -60,6 +60,8 @@ pre_install_actions:
 project_files:
 - docker-compose.hugo.yaml
 - web-build/Dockerfile.ddev-hugo
+# Custom commands must be listed as individual files, not directories.
+- commands/web/hugo
 # - extra_files/
 # - somefile.sh
 

@@ -4,6 +4,7 @@
 
 - [What is ddev-hugo?](#what-is-ddev-hugo)
 - [Getting started](#getting-started)
+- [The `ddev hugo` command](#the-ddev-hugo-command)
 - [Hugo version](#hugo-version)
 
 ## What is ddev-hugo?
@@ -16,8 +17,24 @@ In DDEV addons can be installed from the command line using the `ddev add-on get
 
 1. Create your ddev project with `ddev config --omit-containers=db --docroot public`
 2. Run `ddev add-on get penyaskito/ddev-hugo`
-3. Run `ddev exec hugo`
+3. Run `ddev hugo`
 4. Run `ddev launch`
+
+## The `ddev hugo` command
+
+The add-on installs a `ddev hugo` command, so Hugo can be run directly rather
+than through `ddev exec hugo`:
+
+```bash
+ddev hugo version
+ddev hugo new site . --force
+ddev hugo new content posts/hello.md
+ddev hugo
+```
+
+Flags are passed straight through to Hugo, the command runs in the container
+directory matching your current host directory, and generated files (such as
+`public/`) are synced back to the host.
 
 ## Hugo version
 

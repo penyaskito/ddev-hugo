@@ -14,16 +14,20 @@ setup() {
 health_checks() {
   # The add-on must provide the extended edition, which is what supports
   # Sass/SCSS and WebP processing.
-  ddev exec hugo version | grep extended
-  ddev exec hugo new site quickstart
+  ddev hugo version | grep extended
+  # The command must take flags without ddev consuming them, which is what
+  # ExecRaw buys us.
+  ddev hugo new site quickstart --force
   mv quickstart/* .
   rm -rf quickstart
-  ddev exec hugo new theme testtheme
+  ddev hugo new theme testtheme
   echo "theme = 'testtheme'" >> hugo.toml
   # The generated theme renders the home page content, so no layout tweak is needed.
   printf "+++\ntitle = 'Home'\n+++\n\n# Welcome to Hugo!\n" > content/_index.md
-  ddev exec hugo
-  ddev exec "curl -s https://localhost/index.html" | grep "Welcome to Hugo"
+  ddev hugo
+  # Output must reach the host, not just the container, so MutagenSync matters.
+  [ -f public/index.html ]
+  curl -s "$(ddev describe -j | jq -r .raw.primary_url)/index.html" | grep "Welcome to Hugo"
 }
 
 teardown() {
