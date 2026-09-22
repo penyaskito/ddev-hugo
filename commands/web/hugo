@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+## Description: Run hugo inside the web container
+## Usage: hugo [flags] [args]
+## Example: "ddev hugo version" or "ddev hugo new content posts/hello.md"
+## ExecRaw: true
+## HostWorkingDir: true
+## MutagenSync: true
+
+hugo "$@"
