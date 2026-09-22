@@ -1,8 +1,12 @@
 name: tests
 on:
   pull_request:
+    paths-ignore:
+      - "**.md"
   push:
     branches: [ main ]
+    paths-ignore:
+      - "**.md"
 
   schedule:
   - cron: '25 08 * * *'
@@ -11,9 +15,13 @@ on:
     inputs:
       debug_enabled:
         type: boolean
-        description: Debug with tmate
+        description: Enable remote debugging session
         required: false
         default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 # This is required for "gautamkrishnar/keepalive-workflow", see "ddev/github-action-add-on-test"
 permissions:
@@ -23,6 +31,9 @@ jobs:
   tests:
     strategy:
       matrix:
+        # Hugo is installed from an official release binary, so the arm64
+        # runner exercises a different artifact than the x86_64 one.
+        os: [ubuntu-latest, ubuntu-24.04-arm]
         ddev_version: [stable, HEAD]
         # Run each bats test as its own job so a failure names the test that
         # broke. Passing test_command explicitly also overrides the action's
@@ -35,8 +46,8 @@ jobs:
             command: bats tests --filter-tags release
       fail-fast: false
 
-    name: ${{ matrix.test.name }} (${{ matrix.ddev_version }})
-    runs-on: ubuntu-latest
+    name: ${{ matrix.test.name }} (${{ matrix.ddev_version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: ddev/github-action-add-on-test@v2
